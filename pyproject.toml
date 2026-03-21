@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "codequantbenchmark"
+version = "1.0.0"
+description = "Empirical benchmark for quantization of code-specialized LLMs"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.12"
+dependencies = [
+    "aiohttp>=3.9",
+    "click>=8.1",
+    "gguf>=0.17",
+    "huggingface-hub>=0.36",
+    "matplotlib>=3.10",
+    "numpy>=1.26",
+    "openai>=2.14",
+    "pandas>=2.2",
+    "pydantic>=2.12",
+    "PyYAML>=6.0",
+    "requests>=2.32",
+    "rich>=14.3",
+    "safetensors>=0.7",
+    "seaborn>=0.13",
+    "sentencepiece>=0.2",
+    "torch>=2.6",
+    "transformers>=4.57",
+    "typer>=0.15",
+]
+
+[project.optional-dependencies]
+qlora = [
+    "peft>=0.11",
+    "bitsandbytes>=0.43",
+    "accelerate>=0.30",
+]
+dev = [
+    "pytest>=8.3",
+]
+
+[project.scripts]
+codequant = "main:app"
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

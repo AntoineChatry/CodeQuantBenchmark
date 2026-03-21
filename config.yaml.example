@@ -1,0 +1,84 @@
+project:
+  name: "CodeQuantBenchmark"
+  domain: "python_fastapi"
+
+data:
+  source_dir: "./repos"
+  output_dir: "./data"
+  extensions: [".py"]
+  github:
+    search_query: "fastapi"  # GitHub search query for repo discovery
+    search_language: "Python"
+    max_repos: 10
+    shallow_clone: true
+    repos: []  # Or list explicit URLs: ["https://github.com/user/repo.git"]
+  split_ratios: [0.8, 0.1, 0.1]
+  min_lines: 3
+  max_lines: 500
+  instruction_templates:
+    - "Explain the following Python function:"
+    - "Debug this Python function and fix any issues:"
+    - "Refactor this Python function for better readability:"
+
+model:
+  base_name: "unsloth/mistral-7b-instruct-v0.3-bnb-4bit"  # Kaggle/Colab: unsloth 4bit pre-quant
+  lora_r: 16
+  lora_alpha: 16
+  target_modules: ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+
+training:
+  output_dir: "./models_trained"
+  epochs: 2
+  max_steps: -1  # Set >0 to limit steps (e.g. 2550), -1 = use epochs
+  batch_size: 2
+  gradient_accumulation: 4
+  learning_rate: 2e-5
+  warmup_steps: 5
+  logging_steps: 25
+  max_length: 2048
+  weight_decay: 0.001
+  lr_scheduler_type: "linear"
+  chat_template: "chatml"  # chatml (Kaggle ref) or mistral (Colab ref)
+  packing: false  # true = pack short sequences (faster but different behavior)
+  seed: 3407
+  hf_repo: ""  # Set to "username/repo" to push LoRA adapter to HF Hub
+  hf_repo_merged: ""  # Set to "username/repo-merged" to push merged fp16 model to HF Hub
+  hf_dataset: ""  # Set to "username/dataset" to load from HF Hub instead of local files
+  hf_token: ""  # HF token for push_to_hub (or set HF_TOKEN env var)
+
+kaggle:
+  dataset_slug: "benchmark-training-data"  # Kaggle dataset name for auto-upload
+  kernel_slug: "benchmark-training"  # Kaggle kernel name
+  hf_repo_gguf: ""  # Set to "username/model-gguf" to push GGUF after training
+  gguf_quant: "q4_k_m"  # Quantization method for GGUF export
+
+validation:
+  n_samples: 5  # Reduced for CPU inference (7B model is slow on CPU)
+
+quantization:
+  input_dir: "./models_trained/final"
+  output_dir: "./models_quantized"
+  formats: ["Q2_K", "Q4_K_M", "Q6_K", "Q8_0"]
+  llama_cpp_dir: ""  # Path to llama.cpp repo (for convert_hf_to_gguf.py)
+  llama_quantize_path: ""  # Path to llama-quantize binary
+  convert_script_path: ""  # Auto-detected from llama_cpp_dir
+
+benchmark:
+  test_file: "./data/test.jsonl"
+  results_dir: "./reports"
+  metrics: ["syntax_validity", "jaccard_similarity", "latency"]
+  n_samples: 50  # Number of test samples to benchmark (0 = all)
+  inference:
+    llama_server_path: ""  # Path to llama-server binary
+    api_base: "http://localhost:8080/v1"
+    api_key: "not-needed"
+    n_ctx: 2048
+    max_tokens: 512
+    temperature: 0.1
+
+reporting:
+  output_dir: "./reports"
+  plots:
+    - "quality_vs_quantization"
+    - "latency_vs_quantization"
+    - "size_vs_quality"
