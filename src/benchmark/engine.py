@@ -37,8 +37,8 @@ def _start_server(
     logger.info(f"Starting llama-server: {' '.join(cmd)}")
     proc = subprocess.Popen(
         cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
 
     # Wait for server to be ready (up to 120s for large models on CPU)
@@ -84,6 +84,7 @@ def evaluate_model(
     max_tokens: int = 512,
     model_label: str = "",
     server_pid: int = 0,
+    prompt_template: str = "",
 ) -> list[dict[str, Any]]:
     file_info = get_file_size(model_path)
     _get_mem = (lambda: get_memory_of_pid(server_pid)) if server_pid else get_memory
@@ -94,8 +95,17 @@ def evaluate_model(
     results: list[dict[str, Any]] = []
 
     for i, sample in enumerate(test_data):
-        prompt = sample.get("source", sample.get("prompt", ""))
-        expected = sample.get("expected", prompt)
+        source = sample.get("source")
+        if source is not None:
+            
+            prompt = (
+                f"{prompt_template}\n\n```python\n{source}\n```"
+                if prompt_template else source
+            )
+            expected = sample.get("expected", source)
+        else:
+            prompt = sample.get("prompt", "")
+            expected = sample.get("expected", prompt)
 
         try:
             mem_pre = _get_mem()
@@ -165,6 +175,8 @@ def run(config_path: str = "config.yaml") -> Path:
     max_tokens = get_nested(config, "benchmark", "inference", "max_tokens", default=512)
     temperature = get_nested(config, "benchmark", "inference", "temperature", default=0.1)
     n_samples = get_nested(config, "benchmark", "n_samples", default=0)
+    templates = get_nested(config, "data", "instruction_templates", default=[])
+    prompt_template = templates[0] if templates else "Explain the following Python function:"
 
     test_data = load_test_set(test_file)
     if n_samples > 0:
@@ -199,6 +211,7 @@ def run(config_path: str = "config.yaml") -> Path:
             results = evaluate_model(
                 engine, model_path, test_data, max_tokens=max_tokens,
                 model_label=fmt, server_pid=proc.pid,
+                prompt_template=prompt_template,
             )
             all_results.extend(results)
         finally:

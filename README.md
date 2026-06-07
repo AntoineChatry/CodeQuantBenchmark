@@ -57,28 +57,31 @@ The pipeline transforms raw source code into a quantized and benchmarked model. 
 ### Quick start
 
 ```bash
-# 1. Prepare data (clone repos + extraction + cleaning + ShareGPT format)
+# 1. Clone source repos from GitHub (config: data.github)
+python main.py clone
+
+# 2. Prepare data (extraction + cleaning + ShareGPT format)
 python main.py data
 
-# 2a. Train locally (CPU = debug, GPU = if available)
+# 3a. Train locally (CPU = debug, GPU = if available)
 python main.py train
 
-# 2b. OR train on Kaggle/Colab GPU (recommended)
+# 3b. OR train on Kaggle/Colab GPU (recommended)
 python main.py train-remote
 # -> Pushes data to HF Hub + generates notebook_training.ipynb
 # -> Upload the notebook to Kaggle/Colab, set GPU T4, Run
 
-# 3. Verify the model hasn't forgotten how to code (gate)
+# 4. Verify the model hasn't forgotten how to code (gate)
 python main.py validate
 
-# 4. Convert to GGUF and quantize (Q2_K, Q4_K_M, Q6_K, Q8_0)
+# 5. Convert to GGUF and quantize (Q2_K, Q4_K_M, Q6_K, Q8_0)
 python main.py quantize
 
-# 5. Benchmark + report
+# 6. Benchmark + report
 python main.py benchmark
 python main.py report
 
-# Or all at once (local only):
+# Or all at once, after clone (local only):
 python main.py pipeline
 ```
 
@@ -169,7 +172,7 @@ data:
 |--------|-------------|
 | **Jaccard** | Token-level similarity vs reference |
 | **BLEU** | N-gram precision (1-4) with brevity penalty |
-| **Syntax Validity** | `py_compile` pass rate on generated code |
+| **Syntax Validity** | `compile()` pass rate on generated code |
 | **Latency** | ms/token measured via API |
 | **Memory** | RSS, peak RSS, memory delta per inference |
 | **File Size** | GGUF file size |

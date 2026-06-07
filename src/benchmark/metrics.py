@@ -1,8 +1,6 @@
 """Story 3.3 : Métriques de benchmark."""
 
-import py_compile
-import tempfile
-from pathlib import Path
+import math
 
 
 def jaccard_similarity(text_a: str, text_b: str) -> float:
@@ -18,18 +16,11 @@ def jaccard_similarity(text_a: str, text_b: str) -> float:
 
 
 def syntax_validity(code: str) -> bool:
-    with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".py", delete=False, encoding="utf-8"
-    ) as f:
-        f.write(code)
-        tmp_path = f.name
     try:
-        py_compile.compile(tmp_path, doraise=True)
+        compile(code, "<benchmark>", "exec")
         return True
-    except py_compile.PyCompileError:
+    except (SyntaxError, ValueError):  # ValueError = null bytes
         return False
-    finally:
-        Path(tmp_path).unlink(missing_ok=True)
 
 
 def extract_code_blocks(text: str) -> str:
@@ -63,8 +54,6 @@ def bleu_score(reference: str, candidate: str, max_n: int = 4) -> float:
     w_i = 1/N (uniform weights)
     c = candidate length, r = reference length
     """
-    import math
-
     ref_tokens = reference.split()
     cand_tokens = candidate.split()
     c = len(cand_tokens)

@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Models & data (too large for git)
+models_trained/
+models_quantized/
+repos/
+data/
+
+# Notebooks (incl. generated)
+*.ipynb
+
+# Config with secrets
+config.yaml
+
+# Logs & output
+logs/
+kaggle_output/
+synthetic_workspace/
+
+# Reports (regenerable)
+reports/
+
+# Misc
+*.gguf
+.claude/
+
+# Docs & PDFs (kept out of repo)
+*.pdf
+*.md
+!README.md
